@@ -58,11 +58,12 @@ def fetch_data(url):
 @app.get("/")
 def read_root():
     base_url = 'https://th.wikipedia.org/wiki/รายชื่อวัดในจังหวัด'
-    urls = ['ราชบุรี', 'ลพบุรี', 'ลำปาง', 'ลำพูน']
+    provinces = ['ราชบุรี', 'ลพบุรี', 'ลำปาง', 'ลำพูน']
 
     res = []
-    for url in urls:
-        res.append({url: fetch_data(base_url + url)})
+    for province in provinces:
+        res.append(
+            {'province': province, 'data': fetch_data(base_url + province)})
 
     return res
 
