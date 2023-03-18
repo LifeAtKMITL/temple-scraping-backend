@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  app:
+    container_name: fastapi-simple-app
+    image: fastapi-simple-app
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
