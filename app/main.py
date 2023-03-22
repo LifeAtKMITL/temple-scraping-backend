@@ -22,37 +22,24 @@ app.add_middleware(
 
 
 def fetch_data(url):
-    def filter_strings(strings, pattern):
-        regex = re.compile(pattern)
-        return list(filter(regex.match, strings))
-
-    # request the webpage
     response = requests.get(url)
-    html = response.content.decode('utf-8')
 
-    # read content in div with id='mw-content-text'
-    pattern = r'<div\s+[^>]*id\s*=\s*[\'"]mw-content-text[\'"][^>]*>(.*?)<\/div>'
-    match = re.search(pattern, html, re.DOTALL)
-    content = match.group(1)
+    scraped_text = response.text
 
-    # remove content after h2 with span id='ดูเพิ่ม'
-    pattern = r'<h2.*?>.*?<span.*?id="ดูเพิ่ม".*?>.*?</span>.*?</h2>'
-    match = re.search(pattern, html)
-    tag = match.group(0)
-    index = re.search(re.escape(tag), content).start()
-    content = content[:index]
+    # match div with class mw-parser-output to the line with the word "ดูเพิ่ม"
+    regex = r'^.*?<div class="mw-parser-output">((?:.*\n)*?)^.*?ดูเพิ่ม.*$'
 
-    # find all a and li tag
-    patterns = [r'<a.*?>(.*?)</a>', r'<li>(วัด.*?)</li>']
-    temples = []
+    match = re.search(regex, scraped_text, re.MULTILINE)
 
-    for pattern in patterns:
-        matches = re.findall(pattern, content)
-        matches = filter_strings(matches, r'^วัด.*')
-        temples.extend(matches)
+    if match:
+        container_content = match.group(1)
 
-    # split and get first index
-    return [temple.split(' ')[0] for temple in temples]
+        li_pattern = r'<li>.*?(วัด[ก-์0-9]*).*?</li>'
+        result = re.findall(li_pattern, container_content, re.MULTILINE)
+
+        return result
+    else:
+        return "No match found."
 
 
 @app.get("/")
