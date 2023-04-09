@@ -27,17 +27,45 @@ def fetch_data(url):
     scraped_text = response.text
 
     # match div with class mw-parser-output to the line with the word "ดูเพิ่ม"
-    regex = r'^.*?<div class="mw-parser-output">((?:.*\n)*?)^.*?ดูเพิ่ม.*$'
+    pattern1 = r'^.*?<div class="mw-parser-output">((?:.*\n)*?)^.*?ดูเพิ่ม.*$'
 
-    match = re.search(regex, scraped_text, re.MULTILINE)
+    match = re.search(pattern1, scraped_text, re.MULTILINE)
 
     if match:
         container_content = match.group(1)
 
-        li_pattern = r'<li>.*?(วัด[ก-์0-9]*).*?</li>'
-        result = re.findall(li_pattern, container_content, re.MULTILINE)
+        # match the line that include <li> tag
+        pattern2 = r'^.*<li>.*$'
 
-        return result
+        # all the lines that include <li> tag
+        all_li_tags = re.findall(pattern2, container_content, re.MULTILINE)
+
+        # get content inside tags <h1>content here<h2>some thing else</h2></h1> -> ["co r'(?<!<)(?![^<>]*>)[^<>]+(?<!>)'ntent here", "some thing else""]
+        pattern3 = r'(?<!<)(?![^<>]*>)[^<>]+(?<!>)'
+        match_temple = set()
+        for tag in all_li_tags:
+
+            # Find all matches
+            matches = re.findall(pattern3, tag)
+
+            temple_string_without_tambol = ' '.join(matches)
+
+            pattern4 = r'^.*?(?= ตำ)'
+            res = re.findall(pattern4, temple_string_without_tambol)
+
+            # add space after the temple name (for the special case that after pattern 4 theres no space after the temple name)
+            res[0] = res[0] + ' '
+
+            pattern5 = r'^.*?(?= )'
+            new_res = re.findall(pattern5, res[0])
+
+            temple_clean = new_res[0]
+
+            match_temple.add(temple_clean)
+
+        print(url, len(match_temple))
+
+        return match_temple
     else:
         return "No match found."
 
